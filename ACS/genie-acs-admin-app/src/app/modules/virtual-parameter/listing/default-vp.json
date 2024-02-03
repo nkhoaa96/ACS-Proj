@@ -1,0 +1,164 @@
+[
+    {
+        "name": "MACaddress",
+        "script": "let m = \"00:00:00:00:00:00\";\nlet d = declare(\"InternetGatewayDevice.WANDevice.1.WANConnectionDevice.*.WANIPConnection.1.MACAddress\", {value: Date.now()});\n\nif (d.size) {\n  for (let p of d) {\n    if (p.value[0]) {\n      m = p.value[0];\n      break;\n    }\n  }\n}\n\nreturn {writable: false, value: [m, \"xsd:string\"]};\n\n\n"
+    },
+    {
+        "name": "PPPoEACName",
+        "script": "let m = \"\";\nlet field1 = \"InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Username\";\n\nif (args[1].value) {\n  m = args[1].value[0];\n  declare(field1, null, {value: m});\n}\nelse {\n  let d = declare(field1, {value: Date.now()});\n  if (d.size) {\n    m = d.value[0];\n  }\n}\n\nreturn {writable: true, value: [m, \"xsd:string\"]};\n"
+    },
+    {
+        "name": "RxThroughput",
+        "script": "let m = 0;\nlet d = declare(\"InternetGatewayDevice.Optical.Interface.1.OpticalSignalLevel\", {value: Date.now()});\n\nif (d.size) {\n  for (let p of d) {\n    if (p.value[0]) {\n      m = p.value[0];\n      break;\n    }\n  }\n}\n\nreturn {writable: false, value: [m, \"xsd:int\"]};\n"
+    },
+    {
+        "name": "TxThroughput",
+        "script": "let m = 0;\nlet d = declare(\"InternetGatewayDevice.Optical.Interface.1.TransmitOpticalLevel\", {value: Date.now()});\n\nif (d.size) {\n  for (let p of d) {\n    if (p.value[0]) {\n      m = p.value[0];\n      break;\n    }\n  }\n}\n\nreturn {writable: false, value: [m, \"xsd:int\"]};\n"
+    },
+    {
+        "name": "IPV4Address",
+        "script": "let m = '0.0.0.0';\nconst d = declare(\"InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.ExternalIPAddress\", {value: Date.now()});\n\nif (d.size) {\n  for (let p of d) {\n    if (p.value[0]) {\n      m = p.value[0];\n      break;\n    }\n  }\n}\n\nreturn {writable: false, value: [m, \"xsd:string\"]};\n"
+    },
+    {
+        "name": "SoftwareVersion",
+        "script": "let m = '';\nlet d1 = declare(\"InternetGatewayDevice.DeviceInfo.SoftwareVersion\", {value: Date.now()});\nlet d2 = declare(\"Device.DeviceInfo.SoftwareVersion\", {value: Date.now()});\n\nif (d1.size) {\n  for (let p of d1) {\n    if (p.value[0]) {\n      m = p.value[0];\n      break;\n    }\n  }\n}\nelse if (d2.size) {\n  for (let p of d2) {\n    if (p.value[0]) {\n      m = p.value[0];\n      break;\n    }\n  }\n}\n\nreturn {writable: false, value: [m, \"xsd:string\"]};\n"
+    },
+    {
+        "name": "DownloadURL",
+        "script": "let m = \"\";\nif (args[1].value) {\n  m = args[1].value[0];\n  declare(\"InternetGatewayDevice.DownloadDiagnostics.DownloadURL\", null, {value: m});\n}\nelse {\n  let d = declare(\"Device.IP.Diagnostics.DownloadDiagnostics.DownloadURL\", {value: Date.now()});\n\n  if (d.size) {\n    m = d.value[0];\n  }\n}\n\nreturn {writable: true, value: [m, \"xsd:string\"]};\n"
+    },
+    {
+        "name": "DownloadDiagnosticsState",
+        "script": "let m = \"\";\nif (args[1].value) {\n  m = args[1].value[0];\n  declare(\"InternetGatewayDevice.DownloadDiagnostics.DiagnosticsState\", null, {value: m});\n}\nelse {\n  let d = declare(\"InternetGatewayDevice.DownloadDiagnostics.DiagnosticsState\", {value: Date.now()});\n\n  if (d.size) {\n    m = d.value[0];\n  }\n}\n\nreturn {writable: true, value: [m, \"xsd:string\"]};\n"
+    },
+    {
+        "name": "UploadDiagnosticsState ",
+        "script": "let m = \"\";\nif (args[1].value) {\n  m = args[1].value[0];\n  declare(\"InternetGatewayDevice.UploadDiagnostics.DiagnosticsState\", null, {value: m});\n}\nelse {\n  let d = declare(\"InternetGatewayDevice.UploadDiagnostics.DiagnosticsState\", {value: Date.now()});\n\n  if (d.size) {\n    m = d.value[0];\n  }\n}\n\nreturn {writable: true, value: [m, \"xsd:string\"]};\n"
+    },
+    {
+        "name": "OUI",
+        "script": "let m = '';\nlet igd = declare(\"DeviceID.OUI\", {value: Date.now()});\nlet d = declare(\"Device.DeviceInfo.ManufacturerOUI\", {value: Date.now()});\n\nif (d.size) {\n  for (let p of d) {\n    if (p.value[0]) {\n      m = p.value[0];\n      break;\n    }\n  }\n}\nelse if (igd.size) {\n  for (let p of igd) {\n    if (p.value[0]) {\n      m = p.value[0];\n      break;\n    }\n  }\n}\n\nreturn {writable: false, value: [m, \"xsd:string\"]};\n",
+        "parameterNames": [
+            "a",
+            "b",
+            "c"
+        ]
+    },
+    {
+        "name": "UploadURL",
+        "script": "let m = \"\";\nif (args[1].value) {\n  m = args[1].value[0];\n  declare(\"InternetGatewayDevice.UploadDiagnostics.UploadURL\", null, {value: m});\n}\nelse {\n  let d = declare(\"InternetGatewayDevice.UploadDiagnostics.UploadURL\", {value: Date.now()});\n\n  if (d.size) {\n    m = d.value[0];\n  }\n}\n\nreturn {writable: true, value: [m, \"xsd:string\"]};\n",
+        "parameterNames": [
+            "a",
+            "b",
+            "c"
+        ]
+    },
+    {
+        "name": "UploadTestFileLength",
+        "script": "let m = Date.now();\nconst field1 = 'InternetGatewayDevice.UploadDiagnostics.TestFileLength';\n\nif (args[1].value) {\n  m = args[1].value[0];\n  declare(field1, null, {value: m});\n}\nelse {\n  let d = declare(field1, {value: m});\n\n  if (d.size) {\n    m = d.value[0];\n  }\n}\n\nreturn {writable: true, value: [m, \"xsd:unsignedInt\"]};\n",
+        "parameterNames": [
+            "a",
+            "b",
+            "c"
+        ]
+    },
+    {
+        "name": "UploadEOMTime",
+        "script": "let m = Date.now();\nconst field1 = 'InternetGatewayDevice.UploadDiagnostics.EOMTime';\n\nif (args[1].value) {\n  m = args[1].value[0];\n  declare(field1, null, {value: m});\n}\nelse {\n  let d = declare(field1, {value: m});\n\n  if (d.size) {\n    m = d.value[0];\n  }\n}\n\nreturn {writable: true, value: [m, \"xsd:dateTime\"]};\n",
+        "parameterNames": [
+            "a",
+            "b",
+            "c"
+        ]
+    },
+    {
+        "name": "DownloadEOMTime",
+        "script": "let m = Date.now();\nconst field1 = 'InternetGatewayDevice.DownloadDiagnostics.EOMTime';\n\nif (args[1].value) {\n  m = args[1].value[0];\n  declare(field1, null, {value: m});\n}\nelse {\n  let d = declare(field1, {value: m});\n\n  if (d.size) {\n    m = d.value[0];\n  }\n}\n\nreturn {writable: true, value: [m, \"xsd:dateTime\"]};\n",
+        "parameterNames": [
+            "a",
+            "b",
+            "c"
+        ]
+    },
+    {
+        "name": "DownloadBOMTime",
+        "script": "let m = Date.now();\nconst field1 = 'Device.IP.Diagnostics.DownloadDiagnostics.BOMTime';\n\nif (args[1].value) {\n  m = args[1].value[0];\n  declare(field1, null, {value: m});\n}\nelse {\n  let d = declare(field1, {value: m});\n\n  if (d.size) {\n    m = d.value[0];\n  }\n}\n\nreturn {writable: true, value: [m, \"xsd:dateTime\"]};\n",
+        "parameterNames": [
+            "a",
+            "b",
+            "c"
+        ]
+    },
+    {
+        "name": "UploadTotalBytesSent",
+        "script": "let m = Date.now();\nconst field1 = 'InternetGatewayDevice.UploadDiagnostics.TotalBytesSent';\n\nconst d = declare(field1, {value: m});\n\nif (d.size) {\n  for (let p of d) {\n    if (p.value[0]) {\n      m = p.value[0];\n      break;\n    }\n  }\n}\n\nreturn {writable: false, value: [m, \"xsd:unsignedInt\"]};",
+        "parameterNames": [
+            "a",
+            "b",
+            "c"
+        ]
+    },
+    {
+        "name": "DownloadTotalBytesReceived",
+        "script": "let m = Date.now();\nconst field1 = 'InternetGatewayDevice.DownloadDiagnostics.TotalBytesReceived';\n\nconst d = declare(field1, {value: m});\n\nif (d.size) {\n  for (let p of d) {\n    if (p.value[0]) {\n      m = p.value[0];\n      break;\n    }\n  }\n}\n\nreturn {writable: false, value: [m, \"xsd:unsignedInt\"]};\n",
+        "parameterNames": [
+            "a",
+            "b",
+            "c"
+        ]
+    },
+    {
+        "name": "AddressingType",
+        "script": "let m = '0.0.0.0';\nconst d = declare(\"Device.IP.Interface.1.IPv4Address.1.AddressingType\", {value: Date.now()});\n\nif (d.size) {\n  for (let p of d) {\n    if (p.value[0]) {\n      m = p.value[0];\n      break;\n    }\n  }\n}\n\nreturn {writable: false, value: [m, \"xsd:string\"]};\n",
+        "parameterNames": [
+            "a",
+            "b",
+            "c"
+        ]
+    },
+    {
+        "name": "SSID24G",
+        "script": "let m = \"\";\nlet field1 = \"InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID\";\n\nif (args[1].value) {\n  m = args[1].value[0];\n  declare(field1, null, {value: m});\n}\nelse {\n  let d = declare(field1, {value: Date.now()});\n  if (d.size) {\n    m = d.value[0];\n  }\n}\n\nreturn {writable: true, value: [m, \"xsd:string\"]};\n",
+        "parameterNames": [
+            "a",
+            "b",
+            "c"
+        ]
+    },
+    {
+        "name": "SSID5G",
+        "script": "let productClass = \"\";\nlet m = \"\";\nlet ssidPath = \"VirtualParameters.SSID5G\";\nlet productClassObject = declare(\"DeviceID.ProductClass\", {value: Date.now()});\n\nif (productClassObject.size) {\n  for (let p of productClassObject ) {\n    if (p.value[0]) {\n      productClass=p.value[0];\n      break;\n    }\n    \n  }\n}\n\nif (productClass == \"Archer C64\") {\n  ssidPath = \"InternetGatewayDevice.LANDevice.1.WLANConfiguration.3.SSID\";\n}\nif (productClass == \"H660EM\") {\n  ssidPath = \"InternetGatewayDevice.LANDevice.1.WLANConfiguration.5.SSID\";\n}\n\nif (args[1].value) {\n  m = args[1].value[0];\n  declare(ssidPath, null, {value: m});\n} else {\n  let d1 = declare(ssidPath, {value: Date.now()});\n  if (d1.size) {\n    m = d1.value[0];\n  }\n}\n\nreturn { writable: true, value: [m, \"xsd:string\"] };\n",
+        "parameterNames": [
+            "a",
+            "b",
+            "c"
+        ]
+    },
+    {
+        "name": "HardwareVersion",
+        "script": "let m = \"00:00:00:00:00:00\";\nlet d = declare(\"InternetGatewayDevice.DeviceInfo.HardwareVersion\", {value: Date.now()});\n\nif (d.size) {\n  for (let p of d) {\n    if (p.value[0]) {\n      m = p.value[0];\n      break;\n    }\n  }\n}\n\nreturn {writable: false, value: [m, \"xsd:string\"]};\n",
+        "parameterNames": [
+            "a",
+            "b",
+            "c"
+        ]
+    },
+    {
+        "name": "BytesReceived",
+        "script": "let m = \"\";\nlet d = declare(\"InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Stats.EthernetBytesReceived\", {value: Date.now()});\n\nif (d.size) {\n  for (let p of d) {\n    if (p.value[0]) {\n      m = p.value[0];\n      break;\n    }\n  }\n}\n\nreturn {writable: false, value: [m, \"xsd:unsignedInt\"]};\n",
+        "parameterNames": [
+            "a",
+            "b",
+            "c"
+        ]
+    },
+    {
+        "name": "BytesSent",
+        "script": "let m = \"\";\nlet d = declare(\"InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Stats.EthernetBytesSent\", {value: Date.now()});\n\nif (d.size) {\n  for (let p of d) {\n    if (p.value[0]) {\n      m = p.value[0];\n      break;\n    }\n  }\n}\n\nreturn {writable: false, value: [m, \"xsd:unsignedInt\"]};",
+        "parameterNames": [
+            "a",
+            "b",
+            "c"
+        ]
+    }
+]

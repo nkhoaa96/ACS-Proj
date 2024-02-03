@@ -1,0 +1,11 @@
+{
+  "interval": "0 */30 * * * *",
+  "mongodbUrl": "mongodb://mongoservice:27017/genieacs",
+  "retentionInDays": 30,
+  "externalUpdateTagUrl" : "http://10.17.73.119:8000/api/v1/tags",
+  "intervalUpdateTag": "0 */30 * * * *",
+  "UpdateTagJob": true,
+  "numberUpdatedItem": 20,
+  "proxyHost": "",
+  "proxyPort": null
+}

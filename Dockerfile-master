@@ -1,0 +1,32 @@
+FROM ubuntu:22.04
+RUN apt update
+RUN apt-get install -y \
+    curl \
+    telnet \
+    dnsutils \
+    net-tools \
+    iputils-ping \
+    gnupg \
+    gnupg2 \
+    vim
+
+RUN curl -sL https://deb.nodesource.com/setup_20.x | bash -
+RUN apt-get install -y nodejs
+RUN npm install -g yarn
+
+RUN mkdir app
+WORKDIR /app
+COPY ./ACS /ACS
+WORKDIR /ACS
+RUN yarn install
+RUN yarn run build
+WORKDIR /ACS/genie-acs-admin-app
+RUN yarn global add @angular/cli@14.0.6
+RUN yarn install
+WORKDIR /ACS/schedule
+RUN npm install
+WORKDIR /ACS/cron
+RUN npm install
+EXPOSE 3000 4200
+#CMD ["tail", "-f", "/dev/null"]
+CMD ["/bin/bash", "-c", "cd /ACS && yarn run master & cd /ACS/schedule && npm start & cd /ACS/cron && npm start & cd /ACS/genie-acs-admin-app && yarn start"]

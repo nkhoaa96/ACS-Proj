@@ -1,0 +1,29 @@
+FROM ubuntu:22.04
+RUN apt update
+RUN apt-get install -y \
+    curl \
+    telnet \
+    dnsutils \
+    net-tools \
+    iputils-ping \
+    gnupg \
+    gnupg2 \
+    vim
+
+RUN curl -sL https://deb.nodesource.com/setup_20.x | bash -
+RUN apt-get install -y nodejs
+RUN npm install -g yarn
+
+RUN mkdir app
+RUN mkdir /app/genieacs-sim
+RUN mkdir /app/ACS
+COPY genieacs-sim /app/genieacs-sim/
+COPY ./ACS /app/ACS/
+WORKDIR /app/genieacs-sim
+RUN npm install
+WORKDIR /app/ACS
+RUN yarn install
+RUN yarn run build
+
+#EXPOSE 7547 7557 7567
+CMD ["/bin/bash", "-c", "yarn run slave"]

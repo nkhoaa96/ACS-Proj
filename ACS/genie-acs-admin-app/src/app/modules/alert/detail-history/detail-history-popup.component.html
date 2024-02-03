@@ -1,0 +1,29 @@
+<div class="col-12">
+        <div class="dialog-content">
+            <p-table
+                [lazy]="true"
+                [value]="statusList"
+                [scrollable]="true" scrollHeight="400px"
+                [tableStyle]="{ 'min-width': '50rem' }"
+            >
+                <ng-template pTemplate="header">
+                    <tr class="upper-case">
+                        <th >
+                            Action
+                        </th>
+                        <th>Time</th>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-item let-ri="rowIndex">
+                    <tr>
+                        <td>
+                            {{ item.status }}
+                        </td>
+                        <td>
+                            {{ item.time | ddmmyyyyhhmmss }}
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
+</div>

@@ -1,0 +1,191 @@
+<p-toast></p-toast>
+<div class="card">
+    <div class="container">
+        <div class="flex row">
+            <div class="flex-1">
+                <h3>Logs Management (Device)</h3>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="flex row margin-bottom-20">
+            <div class="flex-2">
+                <button
+                    pButton
+                    type="button"
+                    class="button m2 p-button-approve-all export-button"
+                    (click)="onExportBtnClicked()"
+                >
+                    <span
+                        class="pi pi-download p-button-icon p-button-icon-left ng-star-inserted"
+                    ></span>
+                    Export
+                </button>
+            </div>
+            <div class="flex-2">
+                <p-calendar
+                    [(ngModel)]="chartDateRange"
+                    [placeholder]="'Date Filter'"
+                    (ngModelChange)="chartDateRangeChanged()"
+                    class="m-0 pb-0"
+                    selectionMode="range"
+                ></p-calendar>
+            </div>
+            <div class="flex-auto text-right">
+                <span class="p-input-icon-right search"
+                ><input
+                    #searchInput
+                    type="search"
+                    (keyup)="onSearchTermChanged($event)"
+                    pinputtext=""
+                    placeholder="Search"
+                    class="p-search p-inputtext p-component p-element" /><i
+                    class="pi pi-search"
+                ></i
+                ></span>
+            </div>
+        </div>
+        <p-table
+            [lazy]="true"
+            (onLazyLoad)="nextPage($event)"
+            [totalRecords]="paginationData.Total"
+            [value]="paginationData.Items"
+            [tableStyle]="{ 'min-width': '50rem' }"
+            [paginator]="true"
+            [rows]="10"
+            [tableStyle]="{ 'min-width': '50rem' }"
+            [rowsPerPageOptions]="[
+            10, 25, 50, 100, 200, 500, 1000, 2000, 5000, 10000
+        ]"
+            sortMode="multiple"
+            [customSort]="true"
+            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+        >
+            <ng-template pTemplate="header">
+                <tr class="upper-case">
+                    <th>
+                        <p-checkbox
+                            [binary]="true"
+                            [(ngModel)]="selectAllItems"
+                            (ngModelChange)="selectAll($event)"
+                        ></p-checkbox>
+                    </th>
+                    <th pSortableColumn="DeviceID.SerialNumber">
+                        Serial Number
+                        <p-sortIcon field="DeviceID.SerialNumber"></p-sortIcon>
+                    </th>
+                    <th pSortableColumn="DeviceID.ProductClass">
+                        Product Class
+                        <p-sortIcon field="DeviceID.ProductClass"></p-sortIcon>
+                    </th>
+                    <th>
+                        Description
+                    </th>
+                    <th pSortableColumn="type">
+                        Type
+                        <p-sortIcon
+                            field="type"
+                        ></p-sortIcon>
+                    </th>
+                    <th pSortableColumn="account">
+                        Account
+                        <p-sortIcon
+                            field="account"
+                        ></p-sortIcon>
+                    </th>
+                    <th pSortableColumn="pppoeUser">
+                        PPPOE USER
+                        <p-sortIcon
+                            field="pppoeUser"
+                        ></p-sortIcon>
+                    </th>
+                    <th pSortableColumn="Events.Inform">
+                        Last Inform <p-sortIcon field="Events.Inform"></p-sortIcon>
+                    </th>
+                    <th pSortableColumn="timestamp">
+                        Time <p-sortIcon field="timestamp"></p-sortIcon>
+                    </th>
+                    <th>Tags</th>
+                    <th>
+                        <ng-container *ngIf="selectAllItems || logIds.length > 1; else actionsTemplate">
+                            <button
+                                pButton
+                                pRipple
+                                type="button"
+                                icon="pi pi-trash"
+                                (click)="onRowDeleteAll()"
+                                class="p-button-text p-button-danger p-button-lg p-button-delete"
+                            ></button>
+                        </ng-container>
+                        <ng-template #actionsTemplate>
+                            Actions
+                        </ng-template>
+                    </th>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-item let-ri="rowIndex">
+                <tr>
+                    <td> <p-checkbox
+                        [binary]="true"
+                        [(ngModel)]="item.checked"
+                        (ngModelChange)="onItemChange(ri, $event)"
+                    ></p-checkbox>
+                    </td>
+                    <td>
+                        {{ item.serialNumber }}
+                    </td>
+                    <td>
+                        {{ item.productClass }}
+                    </td>
+                    <td>
+                        {{ item.action }}
+                    </td>
+                    <td>
+                        {{ item.type }}
+                    </td>
+                    <td>
+                        {{ item.account}}
+                    </td>
+                    <td>
+                        {{ getValue(item.device["VirtualParameters.PPPoEACName"], "value[0]", "")}}
+                    </td>
+                    <td>
+                        <svg
+                            width="1em"
+                            height="1em"
+                            xmlns="http://www.w3.org/2000/svg"
+                            xmlns:xlink="http://www.w3.org/1999/xlink"
+                        >
+                            <circle
+                                cx="0.5em"
+                                cy="0.5em"
+                                r="0.4em"
+                                [attr.fill]="getStatusColor(item.device)"
+                            ></circle>
+                        </svg>
+                        <span>{{getValue(item.device["Events.Inform"], "value[0]", "")| dateTimeAsAgo}}</span>
+                    </td>
+                    <td> {{ item.timestamp }}</td>
+                    <td>
+                        <p-chip
+                            *ngFor="let tag of item.device.TagPlainValues"
+                            [label]="tag"
+                        ></p-chip>
+                    </td>
+                    <td>
+                        <button
+                            pButton
+                            pRipple
+                            type="button"
+                            icon="pi pi-trash"
+                            (click)="onRowDelete(item)"
+                            [disabled]="selectAllItems || logIds.length > 1"
+                            class="p-button-text p-button-danger p-button-lg p-button-delete"
+                        ></button>
+                    </td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </div>
+</div>
+<p-confirmDialog [style]="{ width: '50vw' }" appendTo="body"></p-confirmDialog>

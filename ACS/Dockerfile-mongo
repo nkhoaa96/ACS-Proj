@@ -1,0 +1,8 @@
+FROM mongo
+
+#RUN mkdir -p /data/db
+#ENV MONGO_DATA_DIR=/data/db
+#ENV MONGO_LOG_DIR=/var/log/mongodb
+
+EXPOSE 27017
+ENTRYPOINT ["mongod", "--bind_ip", "0.0.0.0"]
