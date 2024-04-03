@@ -26,5 +26,5 @@ WORKDIR /app/ACS
 RUN yarn install
 RUN yarn run build
 
-#EXPOSE 7547 7557 7567
+EXPOSE 3000 4200 7547 7557 7567
 CMD ["/bin/bash", "-c", "yarn run slave"]
