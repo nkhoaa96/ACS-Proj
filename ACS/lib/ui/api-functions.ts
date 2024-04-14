@@ -104,14 +104,10 @@ export async function postTasks(
     delete task._id;
     task["device"] = deviceId;
   }
+
   tasks = await insertTasks(tasks);
   const statuses = tasks.map((t) => {
-    return {
-      _id: t._id,
-      name: t.name,
-      parameterValues: t.parameterValues,
-      status: "pending",
-    };
+    return { _id: t._id, name: t.name, parameterValues: t.parameterValues, status: "pending" };
   });
   const lastInform = Date.now();
   const notInSession = await awaitSessionEnd(deviceId, 30000);
@@ -128,7 +124,7 @@ export async function postTasks(
   const status = await connectionRequest(deviceId, device);
 
   if (status) {
-    console.log("tasks_faults_operations", status);
+    console.log("tasks_faults_operations", status)
     await Promise.all(statuses.map((t) => db.deleteTask(new ObjectId(t._id))));
     return {
       connectionRequest: status,
@@ -166,10 +162,10 @@ export async function postTasks(
   for (const [i, r] of statuses.entries()) {
     if (res[i * 2].length === 0) {
       r.status = "done";
-      console.log("done");
+      console.log("done")
     } else if (res[i * 2 + 1].length === 1) {
       r.status = "fault";
-      console.log("fault");
+      console.log("fault")
       r["fault"] = res[i * 2 + 1][0];
     }
   }
@@ -180,23 +176,25 @@ export async function postTasks(
 }
 
 export async function postLogs(
-  id: string,
-  resource: string,
-  kind: string,
-  type: string,
-  log: Log,
-  task: any,
-  account: string,
-  device: Record<string, { value?: [boolean | number | string, string] }>
-): Promise<{ connectionRequest: string }> {
+    id: string,
+    resource: string,
+    kind: string,
+    type: string,
+    log: Log,
+    task: any,
+    account: string,
+    device: Record<string, { value?: [boolean | number | string, string] }>
+): Promise<{ connectionRequest: string}> {
+
   const lastInform = Date.now();
 
+
   if (task != null) {
-    if (task.status === "done") {
-      let action = `${task.name} ${task.status}`;
+    if (task.status === 'done') {
+      let action = `${task.name} ${task.status}`
       if (task.parameterValues != null && task.parameterValues.length > 0)
-        action = `${task.name} ${task.status}: ${task.parameterValues[0][0]} with value ${task.parameterValues[0][1]}`;
-      const data = {
+        action = `${task.name} ${task.status}: ${task.parameterValues[0][0]} with value ${task.parameterValues[0][1]}`
+      const data= {
         _id: id,
         action: action,
         device: device,
@@ -207,11 +205,11 @@ export async function postLogs(
         type: type,
         account: account,
         resource: resource,
-        timestamp: lastInform,
-      };
-      await putResource("logs", id, data);
-    } else if (task.status === "fault") {
-      const data = {
+        timestamp: lastInform
+      }
+      await putResource("logs", id, data)
+    } else if (task.status === 'fault') {
+      const data= {
         _id: id,
         action: `${task.name} ${task.status}: ${task.fault.message}`,
         device: device,
@@ -222,27 +220,12 @@ export async function postLogs(
         type: type,
         account: account,
         resource: resource,
-        timestamp: lastInform,
-      };
-      await putResource("logs", id, data);
-    } else if (task.status === "pending") {
-      const data = {
-        _id: id,
-        action: `${task.name} ${task.status}: ${log.action}`,
-        device: device,
-        kind: kind,
-        serialNumber: "",
-        productClass: "",
-        pppoeUser: "",
-        type: type,
-        account: account,
-        resource: resource,
-        timestamp: lastInform,
-      };
-      await putResource("logs", id, data);
+        timestamp: lastInform
+      }
+      await putResource("logs", id, data)
     }
   } else {
-    const data = {
+    const data= {
       _id: id,
       action: log.action,
       device: null,
@@ -253,12 +236,12 @@ export async function postLogs(
       type: log.type,
       account: account,
       resource: resource,
-      timestamp: lastInform,
-    };
-    console.log(data);
-    await putResource("logs", id, data);
+      timestamp: lastInform
+    }
+    console.log(data)
+    await putResource("logs", id, data)
   }
-  return { connectionRequest: "OK" };
+  return { connectionRequest: "OK"};
 }
 
 export async function putResource(

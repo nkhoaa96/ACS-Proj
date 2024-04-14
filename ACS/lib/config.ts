@@ -47,7 +47,7 @@ const options = {
   },
   MONGODB_CONNECTION_URL: {
     type: 'string',
-    default: '',
+    default: 'mongodb://mongoservice:27017/admin',
   },
   CWMP_WORKER_PROCESSES: { type: 'int', default: 0 },
   CWMP_PORT: { type: 'int', default: 7547 },

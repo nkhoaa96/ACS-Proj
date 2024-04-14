@@ -197,7 +197,6 @@ async function generateCss(): Promise<void> {
 async function generateBackendJs(externals: string[]): Promise<void> {
   for (const bin of [
     'genieacs-cwmp',
-    'genieacs-cron',
     'genieacs-ext',
     'genieacs-nbi',
     'genieacs-fs',
