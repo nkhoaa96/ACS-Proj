@@ -32,6 +32,8 @@ import Authorizer from '../common/authorizer';
 import { ping } from '../ping';
 import { decodeTag } from '../common';
 import { stringify as yamlStringify } from '../common/yaml';
+const https = require('https');
+const Netmask = require('netmask').Netmask;
 
 const router = new Router();
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -226,7 +228,7 @@ for (const [resource, flags] of Object.entries(resources)) {
     // console.log("typeOfQuery", typeof ctx.request.query.rawQuery)
     // if (typeof ctx.request.query.rawQuery !== "undefined")
     //   filter = ctx.request.query.rawQuery
-    
+
     ctx.body = new PassThrough();
     ctx.type = 'application/json';
 
@@ -607,112 +609,166 @@ router.put('/files/:id', async (ctx) => {
 });
 
 router.post('/devices/:id/tasks', async (ctx) => {
-  const authorizer: Authorizer = ctx.state.authorizer;
-  const log = {
-    message: 'Commit tasks',
-    context: ctx,
-    deviceId: ctx.params.id,
-    tasks: null,
-  };
+  // let serviceType = "public"
+  // let publicUrl = 'http://localhost:3001'
+  // let privateUrl = 'http://localhost:3000'
+  if ( process.env.serviceType === "public") {
+  // if ( serviceType === "public") {
+    let hostnameUrl = process.env.pubclicUrl + ctx.originalUrl;
+    // let hostnameUrl = publicUrl + ctx.originalUrl;
+    const authorizer: Authorizer = ctx.state.authorizer;
+    const filter = and(authorizer.getFilter('devices', 3), [
+      '=',
+      ['PARAM', 'DeviceID.ID'],
+      ctx.params.id,
+    ]);
+    const devices = await db.query('devices', filter);
+    if (!devices.length) return void (ctx.status = 404);
+    const device = devices[0];
+    const privateSubnet = process.env.privateSubnet;
+    // const privateSubnet = "172.16.0.0/16,172.19.0.0/17,172.17.0.0/16";
+    const publicSubnetArr = privateSubnet.split(",");
+    publicSubnetArr.forEach(item => {
+        const block = new Netmask(item);
+        const parsedUrl = new URL(device["InternetGatewayDevice.ManagementServer.ConnectionRequestURL"].value[0]);
+        const ipAddress = parsedUrl.hostname;
+        if (block.contains(ipAddress))
+            // hostnameUrl = privateUrl + ctx.originalUrl;
+            hostnameUrl = process.env.privateUrl + ctx.originalUrl;
+    });
+    const data = JSON.stringify(ctx.request.body);
+    const options = {
+      hostname: hostnameUrl,
+      path: '/posts',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': data.length,
+        'Cookie': ctx.request.headers.cookie
+      }
+    };
+    console.log("hostnameUrl: ", hostnameUrl)
+    const req = https.request(options, (res) => {
+      console.log(`Status Code: ${res.statusCode}`);
+      res.on('data', (d) => {
+        process.stdout.write(d);
+      });
+    });
+    req.on('error', (e) => {
+      console.error("reqErr", e);
+    });
+    req.write(data);
+    req.end();
+    console.log("reqDone: ", req)
+  } else {
+    const authorizer: Authorizer = ctx.state.authorizer;
+    const log = {
+      message: 'Commit tasks',
+      context: ctx,
+      deviceId: ctx.params.id,
+      tasks: null,
+    };
 
-  const filter = and(authorizer.getFilter('devices', 3), [
-    '=',
-    ['PARAM', 'DeviceID.ID'],
-    ctx.params.id,
-  ]);
-  if (!authorizer.hasAccess('devices', 3)) {
-    logUnauthorizedWarning(log);
-    return void (ctx.status = 403);
-  }
-  const devices = await db.query('devices', filter);
-  if (!devices.length) return void (ctx.status = 404);
-  const device = devices[0];
-
-  const validate = authorizer.getValidator('devices', device);
-  for (const t of ctx.request.body) {
-    if (!validate('task', t)) {
+    const filter = and(authorizer.getFilter('devices', 3), [
+      '=',
+      ['PARAM', 'DeviceID.ID'],
+      ctx.params.id,
+    ]);
+    if (!authorizer.hasAccess('devices', 3)) {
       logUnauthorizedWarning(log);
       return void (ctx.status = 403);
     }
-  }
+    const devices = await db.query('devices', filter);
+    if (!devices.length) return void (ctx.status = 404);
+    const device = devices[0];
 
-  const onlineThreshold = getConfig(
-    ctx.state.configSnapshot,
-    'cwmp.deviceOnlineThreshold',
-    {},
-    Date.now(),
-    (exp) => {
-      if (!Array.isArray(exp)) return exp;
-      if (exp[0] === 'PARAM') {
-        const p = device[exp[1]];
-        if (p?.value) return p.value[0];
-      } else if (exp[0] === 'FUNC') {
-        if (exp[1] === 'REMOTE_ADDRESS') {
-          for (const root of ['InternetGatewayDevice', 'Device']) {
-            const p = device[`${root}.ManagementServer.ConnectionRequestURL`];
-            if (p?.value) return new URL(p.value[0]).hostname;
-          }
-          return null;
-        }
+    const validate = authorizer.getValidator('devices', device);
+    for (const t of ctx.request.body) {
+      if (!validate('task', t)) {
+        logUnauthorizedWarning(log);
+        return void (ctx.status = 403);
       }
-      return exp;
     }
-  ) as number;
+  console.log("deviceHostname: ", device["InternetGatewayDevice.ManagementServer.ConnectionRequestURL"].value[0])
 
-  const socketTimeout: number = ctx.socket['timeout'];
+    const onlineThreshold = getConfig(
+        ctx.state.configSnapshot,
+        'cwmp.deviceOnlineThreshold',
+        {},
+        Date.now(),
+        (exp) => {
+          if (!Array.isArray(exp)) return exp;
+          if (exp[0] === 'PARAM') {
+            const p = device[exp[1]];
+            if (p?.value) return p.value[0];
+          } else if (exp[0] === 'FUNC') {
+            if (exp[1] === 'REMOTE_ADDRESS') {
+              for (const root of ['InternetGatewayDevice', 'Device']) {
+                const p = device[`${root}.ManagementServer.ConnectionRequestURL`];
+                if (p?.value) return new URL(p.value[0]).hostname;
+              }
+              return null;
+            }
+          }
+          return exp;
+        }
+    ) as number;
 
-  // Disable socket timeout while waiting for postTasks()
-  if (socketTimeout) ctx.socket.setTimeout(0);
+    const socketTimeout: number = ctx.socket['timeout'];
 
-  //get current user
-  const res = await apiFunctions.postTasks(
-    ctx.params.id,
-    ctx.request.body,
-    onlineThreshold,
-    device
-  );
-  console.log("postTasks", res)
+    // Disable socket timeout while waiting for postTasks()
+    if (socketTimeout) ctx.socket.setTimeout(0);
 
-  //
-  if (res.connectionRequest === "OK") {
-    res.tasks.forEach(task => {
-      if (task.status === 'fault') {
-        console.log(task.fault)
-        void apiFunctions.postLogs(
-            uuidv4(),
-            "devices",
-            "device",
-            "write",
-            null,
-            task,
-            ctx.state.user.username,
-            device
-        );
-      }
-      else if (task.status === 'done') {
-        void apiFunctions.postLogs(
-            uuidv4(),
-            "devices",
-            "device",
-            "write",
-            null,
-            task,
-            ctx.state.user.username,
-            device
-        );
-      }
-    })
+    //get current user
+    const res = await apiFunctions.postTasks(
+        ctx.params.id,
+        ctx.request.body,
+        onlineThreshold,
+        device
+    );
+    console.log("postTasks", res)
+
+    //
+    if (res.connectionRequest === "OK") {
+      res.tasks.forEach(task => {
+        if (task.status === 'fault') {
+          console.log(task.fault)
+          void apiFunctions.postLogs(
+              uuidv4(),
+              "devices",
+              "device",
+              "write",
+              null,
+              task,
+              ctx.state.user.username,
+              device
+          );
+        }
+        else if (task.status === 'done') {
+          void apiFunctions.postLogs(
+              uuidv4(),
+              "devices",
+              "device",
+              "write",
+              null,
+              task,
+              ctx.state.user.username,
+              device
+          );
+        }
+      })
+    }
+
+    // Restore socket timeout
+    if (socketTimeout) ctx.socket.setTimeout(socketTimeout);
+
+    log.tasks = res.tasks.map((t) => t._id).join(',');
+
+    logger.accessInfo(log);
+
+    ctx.set('Connection-Request', res.connectionRequest);
+    ctx.body = res.tasks;
   }
-
-  // Restore socket timeout
-  if (socketTimeout) ctx.socket.setTimeout(socketTimeout);
-
-  log.tasks = res.tasks.map((t) => t._id).join(',');
-
-  logger.accessInfo(log);
-
-  ctx.set('Connection-Request', res.connectionRequest);
-  ctx.body = res.tasks;
 });
 
 router.post('/devices/:id/tags', async (ctx) => {
