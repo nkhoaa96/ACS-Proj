@@ -21,6 +21,7 @@
   "dependencies": {
     "@breejs/later": "^4.1.0",
     "@koa/cors": "^4.0.0",
+    "axios": "^1.6.8",
     "concurrently": "^8.2.2",
     "espresso-iisojs": "^1.0.4",
     "iconv-lite": "^0.6.3",

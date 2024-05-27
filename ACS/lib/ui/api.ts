@@ -32,7 +32,7 @@ import Authorizer from '../common/authorizer';
 import { ping } from '../ping';
 import { decodeTag } from '../common';
 import { stringify as yamlStringify } from '../common/yaml';
-const https = require('https');
+const axios = require("axios")
 const Netmask = require('netmask').Netmask;
 
 const router = new Router();
@@ -609,13 +609,8 @@ router.put('/files/:id', async (ctx) => {
 });
 
 router.post('/devices/:id/tasks', async (ctx) => {
-  // let serviceType = "public"
-  // let publicUrl = 'http://localhost:3001'
-  // let privateUrl = 'http://localhost:3000'
   if ( process.env.serviceType === "public") {
-  // if ( serviceType === "public") {
-    let hostnameUrl = process.env.pubclicUrl + ctx.originalUrl;
-    // let hostnameUrl = publicUrl + ctx.originalUrl;
+    let hostnameUrl = process.env.pubclicUrl;
     const authorizer: Authorizer = ctx.state.authorizer;
     const filter = and(authorizer.getFilter('devices', 3), [
       '=',
@@ -626,40 +621,31 @@ router.post('/devices/:id/tasks', async (ctx) => {
     if (!devices.length) return void (ctx.status = 404);
     const device = devices[0];
     const privateSubnet = process.env.privateSubnet;
-    // const privateSubnet = "172.16.0.0/16,172.19.0.0/17,172.17.0.0/16";
-    const publicSubnetArr = privateSubnet.split(",");
-    publicSubnetArr.forEach(item => {
+    const privateSubnetArr = privateSubnet.split(",");
+    privateSubnetArr.forEach(item => {
         const block = new Netmask(item);
         const parsedUrl = new URL(device["InternetGatewayDevice.ManagementServer.ConnectionRequestURL"].value[0]);
         const ipAddress = parsedUrl.hostname;
         if (block.contains(ipAddress))
-            // hostnameUrl = privateUrl + ctx.originalUrl;
-            hostnameUrl = process.env.privateUrl + ctx.originalUrl;
+            hostnameUrl = process.env.privateUrl;
     });
-    const data = JSON.stringify(ctx.request.body);
-    const options = {
-      hostname: hostnameUrl,
-      path: '/posts',
-      method: 'POST',
+    const config = {
       headers: {
         'Content-Type': 'application/json',
-        'Content-Length': data.length,
         'Cookie': ctx.request.headers.cookie
       }
     };
-    console.log("hostnameUrl: ", hostnameUrl)
-    const req = https.request(options, (res) => {
-      console.log(`Status Code: ${res.statusCode}`);
-      res.on('data', (d) => {
-        process.stdout.write(d);
+    const reqURL = hostnameUrl + ctx.originalUrl;
+    await axios.post(reqURL, ctx.request.body, config)
+      .then(response => {
+          ctx.set('Connection-Request', response.headers['connection-request']);
+          ctx.body = response.data;
+          console.log('Response from server:', response.data);
+          console.log('Response header from server:', response.headers);
+      })
+      .catch(error => {
+        console.error('Error during the POST request:', error.message);
       });
-    });
-    req.on('error', (e) => {
-      console.error("reqErr", e);
-    });
-    req.write(data);
-    req.end();
-    console.log("reqDone: ", req)
   } else {
     const authorizer: Authorizer = ctx.state.authorizer;
     const log = {
@@ -689,8 +675,6 @@ router.post('/devices/:id/tasks', async (ctx) => {
         return void (ctx.status = 403);
       }
     }
-  console.log("deviceHostname: ", device["InternetGatewayDevice.ManagementServer.ConnectionRequestURL"].value[0])
-
     const onlineThreshold = getConfig(
         ctx.state.configSnapshot,
         'cwmp.deviceOnlineThreshold',
